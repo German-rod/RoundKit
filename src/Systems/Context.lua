@@ -113,7 +113,7 @@ end
 
 --- Checks the win condition and fires the OnWinConditionMet event if it is met.
 --- Fires 'OnWinConditionMet' if the win condition is met.
---- @return WinConditionOutcome?
+--- @return WinOutcome?
 function Context:CheckWinCondition()
 	return self.RoundManager:CheckWinCondition()
 end

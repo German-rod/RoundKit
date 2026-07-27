@@ -210,7 +210,7 @@ end
 
 --- Checks the win condition and fires the OnWinConditionMet event if it is met.
 --- Fires 'OnWinConditionMet' if the win condition is met.
---- @return WinConditionOutcome?
+--- @return WinOutcome?
 function RoundManager:CheckWinCondition()
 	local phase = self.CurrentPhase
 	if not phase or not phase.EvaluateWinCondition then
@@ -231,7 +231,7 @@ function RoundManager:BuildContext()
 end
 
 --- Evaluates the win condition and returns the outcome.
---- @return WinConditionOutcome?
+--- @return WinOutcome?
 function RoundManager:EvaluateWinCondition()
 	if not self.WinCondition then
 		return nil
