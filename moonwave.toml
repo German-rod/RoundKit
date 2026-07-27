@@ -1,8 +1,18 @@
 title = "RoundKit"
+gitRepoUrl = "https://github.com/German-rod/RoundKit"
+gitSourceBranch = "main"
 
 [home]
 enabled = true
-tagline = "A modular, server-authoritative round-flow framework for Roblox."
+tagline = "A modular, round-flow framework for Roblox."
+
+[docusaurus]
+onBrokenLinks = "throw"
+onBrokenMarkdownLinks = "warn"
+organizationName = "German-rod"
+projectName = "RoundKit"
+url = "https://German-rod.github.io"
+baseUrl = "/RoundKit/"
 
 [[classOrder]]
 section = "Core"

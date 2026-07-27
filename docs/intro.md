@@ -4,14 +4,11 @@ sidebar_position: 1
 
 # Introduction
 
-RoundKit is a modular, server-authoritative framework for building round-based game modes on Roblox. Rather than centering your game around a large controller script, RoundKit models a match as a collection of **phases**, each with its own lifecycle, transition rules, and behavior.
+RoundKit is a framework for building round-based games on Roblox.
 
-## Features
+Instead of managing a round with a single controller script, RoundKit lets you define a match as a series of phases—such as a lobby, countdown, active game, and results—each with its own behavior and transition rules.
 
-- **Phase-based architecture** for modelling round lifecycles.
-- **Configurable phase transitions** with static or dynamic transition rules.
-- **Pluggable win conditions** for implementing custom logic.
-- **Context API** for safely interacting with the current round state.
+The framework takes care of the round flow so you can focus on implementing your game's mechanics.
 
 ## Concepts
 
@@ -32,6 +29,14 @@ local Phases = {
     Lobby = {
         Name = "Lobby",
         AllowedTransitions = { "Countdown" },
+        CanTransitionTo = function(context, phase)
+            if phase == "Countdown" then
+                local playerReadyCount = context:GetReadyPlayerCount()
+		        local minPlayers = context.Config.MinPlayers
+		
+		        return playerReadyCount >= minPlayers
+            end
+        end,
     },
 
     Countdown = {
@@ -51,8 +56,8 @@ local Phases = {
     Active = {
         Name = "Active",
         AllowedTransitions = { "Lobby" },
-        CheckWinCondition = true,
-        WinCheckInterval = 1,
+        EvaluateWinCondition = true,
+        EvaluateWinConditionInterval = 1,
 
         OnEnter = function(context)
             print("Entered active phase.")
@@ -78,6 +83,7 @@ local manager = RoundKit.new({
     Phases = Phases,
     InitialPhase = "Lobby",
     WinCondition = "TimeLimit",
+    MinPlayers = 4,
 })
 
 manager:Start()
