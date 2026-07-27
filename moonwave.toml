@@ -1,6 +1,6 @@
 title = "RoundKit"
 gitRepoUrl = "https://github.com/German-rod/RoundKit"
-gitSourceBranch = "main"
+gitSourceBranch = "master"
 
 [home]
 enabled = true
