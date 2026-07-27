@@ -1,0 +1,26 @@
+title = "RoundKit"
+
+[home]
+enabled = true
+tagline = "A modular, server-authoritative round-flow framework for Roblox."
+
+[[classOrder]]
+section = "Core"
+classes = ["RoundManager", "Context"]
+
+[[classOrder]]
+section = "Win Conditions"
+classes = ["WinCondition"]
+
+[[classOrder]]
+section = "Reconnection"
+classes = ["ReconnectionPolicy"]
+
+[[classOrder]]
+section = "Player State"
+classes = ["PlayerRoundState", "PlayerStateRegistry", "GlobalMetricRegistry"]
+
+[[classOrder]]
+section = "Dependencies"
+collapsed = true
+classes = ["Signal"]
