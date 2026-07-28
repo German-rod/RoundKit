@@ -73,7 +73,7 @@ RoundKit.WinCondition.new("TimeLimit", function(context)
     if context:GetElapsedTime() >= 60 then
         return {
             Type = "Player",
-            Winners = context:GetEntities(),
+            Winners = context:GetPlayers(),
         }
     end
 end)

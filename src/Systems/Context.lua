@@ -18,13 +18,13 @@ function Context.new(roundManager)
 end
 
 --- @return table
---- Returns all entities that have a player state in the round
-function Context:GetEntities()
-	local entities = {}
+--- Returns all players that have a player state in the round
+function Context:GetPlayers()
+	local players = {}
 	for _, state in pairs(self.RoundManager.PlayerStates:GetAllPlayerStates()) do
-		table.insert(entities, state.Player)
+		table.insert(players, state.Player)
 	end
-	return entities
+	return players
 end
 
 --- @param entity Player
@@ -91,14 +91,6 @@ end
 --- Sets a value in the registry
 function Context:SetGlobalMetric(key, value)
 	self.RoundManager.GlobalMetrics:Set(key, value)
-end
-
---- @param key string
---- @param delta number
---- @return ()
---- Applies a delta to a value in the registry
-function Context:ApplyGlobalMetric(key, delta)
-	self.RoundManager.GlobalMetrics:Apply(key, delta)
 end
 
 --// Delegated from RoundsManager

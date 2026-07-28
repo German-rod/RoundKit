@@ -3,7 +3,7 @@ export type Context = {
 	EventBus: any,
 	Config: any,
 
-	GetEntities: (self: Context) -> { any },
+	GetPlayers: (self: Context) -> { Player },
 	GetMetric: (self: Context, entity: any, key: string) -> number,
 	GetReadyPlayerCount: (self: Context) -> number,
 	GetElapsedTime: (self: Context) -> number,

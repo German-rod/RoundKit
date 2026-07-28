@@ -3,7 +3,7 @@
 	@interface Events
 	.OnPhaseChanged (oldPhase: Phase, newPhase: Phase)
 	.OnPlayerAdded (player: Player)
-	.OnPlayerRemoving (player: Player)
+	.OnPlayerRemoving (player: Player, state: PlayerRoundState? | nil)
 	.OnWinConditionMet (outcome: WinOutcome)
 	.OnRoundReset ()
 ]=]
@@ -19,7 +19,7 @@ local Context = require(script.Parent.Parent.Systems.Context)
 local WinCondition = require(script.Parent.WinCondition)
 local ReconnectionPolicy = require(script.Parent.ReconnectionPolicy)
 
-local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
 --- @class RoundManager
 --- Orchestrates round lifecycles, phase transitions, and state management.
@@ -41,6 +41,7 @@ function RoundManager.new(config): RoundManager
 		WinCondition = WinCondition.Resolve(config.WinCondition),
 		ReconnectionPolicy = config.ReconnectionPolicy and ReconnectionPolicy.Resolve(config.ReconnectionPolicy) or nil,
 		EventBus = RoundEventBus.new(),
+		_context = nil,
 		_phaseElapsed = 0,
 		_winCheckElapsed = 0,
 		_phaseConnections = {},
@@ -244,7 +245,11 @@ end
 --- Builds a new context for the current state of the round manager.
 --- @return Context
 function RoundManager:BuildContext()
-	return Context.new(self)
+	if not self._context then
+		self._context = Context.new(self)
+	end
+
+	return self._context
 end
 
 --- Evaluates the win condition and returns the outcome.
