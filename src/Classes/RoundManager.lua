@@ -314,6 +314,7 @@ end
 --- :::
 --- :::caution
 --- The player round state is not removed from the registry, it is only marked as disconnected. This allows for reconnection policies to handle the player if they rejoin.
+--- Player's round state will be removed from the registry if it is considered stale (disconnected for longer than StaleStateTimeout seconds).
 --- :::
 --- @param player Player
 function RoundManager:OnPlayerRemoving(player)
