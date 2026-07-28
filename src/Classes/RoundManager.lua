@@ -60,6 +60,19 @@ function RoundManager:Start()
 	self._started = true
 	self._paused = false
 
+	if self.Config.AutoWirePlayers then
+		self._playerAddedConn = Players.PlayerAdded:Connect(function(player)
+			self:OnPlayerAdded(player)
+		end)
+		self._playerRemovingConn = Players.PlayerRemoving:Connect(function(player)
+			self:OnPlayerRemoving(player)
+		end)
+
+		for _, player in ipairs(Players:GetPlayers()) do
+			self:OnPlayerAdded(player) -- seeds anyone already connected before Start() was called
+		end
+	end
+
 	local lastTime = os.clock()
 	local function tick()
 		local now = os.clock()
@@ -251,7 +264,7 @@ end
 --- If the player already has round state (reconnection), triggers the reconnection policy.
 --- Otherwise, fires the 'OnPlayerJoined' event for the developer to handle.
 --- :::caution
---- You must connect this to Players.PlayerAdded (or similar) for it to work.
+--- You must connect this to Players.PlayerAdded (or similar) or set AutoWirePlayers to true for it to work.
 --- :::
 --- @param player Player
 function RoundManager:OnPlayerAdded(player)
@@ -270,11 +283,20 @@ function RoundManager:OnPlayerAdded(player)
 	self.EventBus:Fire("OnPlayerJoined", ctx, player)
 end
 
+--- Connects a callback to the OnPlayerJoined event.
+--- :::caution
+--- You must connect :OnPlayerAdded to Players.PlayerAdded (or similar) or set AutoWirePlayers to true for it to work.
+--- :::
+--- @param callback (context: Context, player: Player) -> ()
+function RoundManager:OnPlayerJoined(callback)
+	return self.EventBus:Connect("OnPlayerJoined", callback)
+end
+
 --- Detects when a player is leaving the game.
 --- If the player has a round state, marks them as disconnected
 --- Fires the 'OnPlayerLeft' event for the developer to handle.
 --- :::caution
---- You must connect this to Players.PlayerRemoving (or similar) for it to work.
+--- You must connect this to Players.PlayerRemoving (or similar) or set AutoWirePlayers to true for it to work.
 --- :::
 --- :::caution
 --- The player round state is not removed from the registry, it is only marked as disconnected. This allows for reconnection policies to handle the player if they rejoin.
@@ -311,6 +333,12 @@ function RoundManager:Destroy()
 
 	self._running = false -- stops the main loop
 
+	if self._playerAddedConn then
+		self._playerAddedConn:Disconnect()
+	end
+	if self._playerRemovingConn then
+		self._playerRemovingConn:Disconnect()
+	end
 	if self._driverConn then
 		self._driverConn:Disconnect()
 	end

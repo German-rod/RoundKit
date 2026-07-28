@@ -83,8 +83,20 @@ local manager = RoundKit.new({
     Phases = Phases,
     InitialPhase = "Lobby",
     WinCondition = "TimeLimit",
+    AutoWirePlayers = true, -- Connects the players OnAdded and OnRemoving automatically.
     MinPlayers = 4,
 })
+
+-- Set up the logic for player joining
+manager:OnPlayerJoined(function(context, player)
+	local phase = context:GetCurrentPhase()
+	if phase.Name == "Lobby" then
+		context:AddPlayerState(player):SetReady(true)
+	elseif phase.Name == "Active" then
+		local state = context:AddPlayerState(player)
+		state.Spectating = true
+	end
+end)
 
 -- Start the round.
 manager:Start()

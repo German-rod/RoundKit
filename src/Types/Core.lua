@@ -66,6 +66,7 @@ export type ReconnectionPolicy = {
 	.ReconnectionPolicy string | ReconnectionPolicy? -- Optional; a registered name or raw instance
 	.Driver RBXScriptSignal? -- Optional; overrides the default polling loop
 	.UpdateInterval number? -- Optional; seconds between ticks when no Driver is set (default 1)
+	.AutoWirePlayers boolean? -- Optional; if true, automatically connects to Players.PlayerAdded and Players.PlayerRemoving (default false)
 
 	The configuration table passed to `RoundKit.new()`.
 ]=]
@@ -74,6 +75,9 @@ export type RoundConfig = {
 	InitialPhase: string,
 	WinCondition: string | WinCondition,
 	ReconnectionPolicy: (string | ReconnectionPolicy)?,
+	Driver: RBXScriptSignal?,
+	UpdateInterval: number?,
+	AutoWirePlayers: boolean?,
 	[string]: any,
 }
 
