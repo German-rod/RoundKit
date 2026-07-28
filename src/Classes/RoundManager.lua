@@ -69,7 +69,7 @@ function RoundManager:Start()
 		end)
 
 		for _, player in ipairs(Players:GetPlayers()) do
-			self:OnPlayerAdded(player) -- seeds anyone already connected before Start() was called
+			self:OnPlayerAdded(player)
 		end
 	end
 
