@@ -67,6 +67,7 @@ export type ReconnectionPolicy = {
 	.Driver RBXScriptSignal? -- Optional; overrides the default polling loop
 	.UpdateInterval number? -- Optional; seconds between ticks when no Driver is set (default 1)
 	.AutoWirePlayers boolean? -- Optional; if true, automatically connects to Players.PlayerAdded and Players.PlayerRemoving (default false)
+	.StaleStateTimeout number? -- Optional; seconds before a disconnected player's state is considered stale (default 30)
 
 	The configuration table passed to `RoundKit.new()`.
 ]=]
@@ -78,6 +79,8 @@ export type RoundConfig = {
 	Driver: RBXScriptSignal?,
 	UpdateInterval: number?,
 	AutoWirePlayers: boolean?,
+	StaleStateTimeout: number?,
+
 	[string]: any,
 }
 

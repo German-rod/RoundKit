@@ -44,6 +44,11 @@ end
 --- Sets the connection status of the player
 function PlayerRoundState:SetConnected(connected)
 	self.Connected = connected
+
+	if not connected then
+		self.Ready = false
+		self.DisconnectedTime = os.clock()
+	end
 end
 
 --- @param ready boolean

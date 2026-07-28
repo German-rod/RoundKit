@@ -35,6 +35,7 @@ function RoundManager.new(config): RoundManager
 		Config = config,
 		Phases = config.Phases,
 		CurrentPhase = nil,
+		StaleStateTimeout = config.StaleStateTimeout or 30,
 		PlayerStates = PlayerStateRegistry.new(),
 		GlobalMetrics = setmetatable({}, GlobalMetricRegistry),
 		WinCondition = WinCondition.Resolve(config.WinCondition),
@@ -161,7 +162,7 @@ function RoundManager:TransitionTo(phaseName)
 	return true
 end
 
---- Updates the round manager state, evaluates the current phase state, if it should transition and the win condition.
+--- Updates the round manager state, evaluates the current phase state, if it should transition, the win condition and manages stale player states.
 --- @param dt number
 function RoundManager:Update(dt)
 	if self._paused then
@@ -207,6 +208,19 @@ function RoundManager:Update(dt)
 		if self._winCheckElapsed >= phase.EvaluateWinConditionInterval then
 			self._winCheckElapsed = 0
 			self:CheckWinCondition()
+		end
+	end
+
+	if self.StaleStateTimeout then
+		local now = os.clock()
+		for userId, state in self.PlayerStates:GetAllPlayerStates() do
+			if
+				not state.Connected
+				and state.DisconnectedTime
+				and now - state.DisconnectedTime >= self.StaleStateTimeout
+			then
+				self.PlayerStates:RemovePlayerState(userId)
+			end
 		end
 	end
 end
