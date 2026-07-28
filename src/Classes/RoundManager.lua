@@ -1,19 +1,12 @@
---[[
-	RoundManager Class
-	Orchestrates round lifecycles, phase transitions, and state management.
-
-	Public Event Bus Signals (manager.EventBus)
-	* "OnPhaseChanged"  (oldPhase: Phase, newPhase: Phase)
-		Fired when the round phase changes
-	* "OnPlayerAdded"  (player: Player)
-		Fired when a player is added to the round
-	* "OnPlayerRemoving"  (player: Player)
-		Fired when a player is removed from the round
-	* "OnWinConditionMet"  (outcome: WinOutcome)
-	 	Fired when a win condition is met
-	* "OnRoundReset"
-		Fired when the round is reset
-]]
+--[=[
+	@within RoundManager
+	@interface Events
+	.OnPhaseChanged (oldPhase: Phase, newPhase: Phase)
+	.OnPlayerAdded (player: Player)
+	.OnPlayerRemoving (player: Player)
+	.OnWinConditionMet (outcome: WinOutcome)
+	.OnRoundReset ()
+]=]
 
 local Core = require(script.Parent.Parent.Types.Core)
 export type RoundManager = Core.RoundManager
@@ -49,7 +42,6 @@ function RoundManager.new(config): RoundManager
 		EventBus = RoundEventBus.new(),
 		_phaseElapsed = 0,
 		_winCheckElapsed = 0,
-		_canTransitionElapsed = 0,
 		_phaseConnections = {},
 		_paused = true,
 		_started = false,
@@ -125,6 +117,7 @@ function RoundManager:TransitionTo(phaseName)
 	assert(nextPhase, "RoundKit no phase registered under name '" .. phaseName .. "'")
 
 	if self.CurrentPhase then
+		-- resolves the current phase allowed transitions and triggers OnExit
 		local ctx = self:BuildContext()
 		local allowed = self:ResolveAllowedTransitions(self.CurrentPhase, ctx)
 		if not table.find(allowed, phaseName) then
@@ -145,7 +138,6 @@ function RoundManager:TransitionTo(phaseName)
 	self.CurrentPhase = nextPhase
 	self._phaseElapsed = 0
 	self._winCheckElapsed = 0
-	self._canTransitionElapsed = 0
 
 	if nextPhase.OnEnter then
 		nextPhase.OnEnter(self:BuildContext())
@@ -170,7 +162,9 @@ function RoundManager:Update(dt)
 
 	self._phaseElapsed += dt
 
+	-- checks if the phase has a defined duration and if the elapsed time is past the duration.
 	if phase.Duration and self._phaseElapsed >= phase.Duration then
+		-- transitions to the resolved allowed transitions for the phase
 		local ctx = self:BuildContext()
 		local allowed = self:ResolveAllowedTransitions(phase, ctx)
 		assert(
@@ -183,18 +177,14 @@ function RoundManager:Update(dt)
 		return
 	end
 
+	-- Evaluates the CanTransitionTo function, resolves the allowed transitions and tries to transition to the first one.
 	if phase.CanTransitionTo then
-		self._canTransitionElapsed += dt
-		local interval = phase.CanTransitionInterval or 1
-		if self._canTransitionElapsed >= interval then
-			self._canTransitionElapsed = 0
-			local ctx = self:BuildContext()
-			local allowed = self:ResolveAllowedTransitions(phase, ctx)
-			for _, targetName in ipairs(allowed) do
-				if phase.CanTransitionTo(ctx, targetName) then
-					self:TransitionTo(targetName)
-					return
-				end
+		local ctx = self:BuildContext()
+		local allowed = self:ResolveAllowedTransitions(phase, ctx)
+		for _, targetName in ipairs(allowed) do
+			if phase.CanTransitionTo(ctx, targetName) then
+				self:TransitionTo(targetName)
+				return
 			end
 		end
 	end
@@ -257,8 +247,12 @@ function RoundManager:ResolveAllowedTransitions(phase, ctx)
 	return allowed
 end
 
---- Handles the addition of a new player, if the player was already in the game, it will be handled by the reconnection policy and fires the OnPlayerJoined event.
---- Fires 'OnPlayerJoined' if the player was not already in the game.
+--- Detects when a player is added to the game.
+--- If the player already has round state (reconnection), triggers the reconnection policy.
+--- Otherwise, fires the 'OnPlayerJoined' event for the developer to handle.
+--- :::caution
+--- You must connect this to Players.PlayerAdded (or similar) for it to work.
+--- :::
 --- @param player Player
 function RoundManager:OnPlayerAdded(player)
 	local ctx = self:BuildContext()
@@ -276,8 +270,15 @@ function RoundManager:OnPlayerAdded(player)
 	self.EventBus:Fire("OnPlayerJoined", ctx, player)
 end
 
---- Handles the removal of a player, fires the OnPlayerLeft event, the state is purposefully left in the round state for the reconnection policy to handle.
---- Fires 'OnPlayerLeft' when the player is removed.
+--- Detects when a player is leaving the game.
+--- If the player has a round state, marks them as disconnected
+--- Fires the 'OnPlayerLeft' event for the developer to handle.
+--- :::caution
+--- You must connect this to Players.PlayerRemoving (or similar) for it to work.
+--- :::
+--- :::caution
+--- The player round state is not removed from the registry, it is only marked as disconnected. This allows for reconnection policies to handle the player if they rejoin.
+--- :::
 --- @param player Player
 function RoundManager:OnPlayerRemoving(player)
 	local state = self.PlayerStates:GetPlayerState(player.UserId)

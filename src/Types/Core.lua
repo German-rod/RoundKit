@@ -39,7 +39,6 @@ export type Phase = {
 	Name: string,
 	AllowedTransitions: { string } | (ctx: Context) -> { string },
 	Duration: number?,
-	CanTransitionInterval: number?,
 	CanTransitionTo: ((ctx: Context, targetPhase: string) -> boolean)?,
 	CheckWinCondition: boolean?,
 	EvaluateWinConditionInterval: number?,
