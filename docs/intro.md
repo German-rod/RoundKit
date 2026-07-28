@@ -42,11 +42,11 @@ local Phases = {
         AllowedTransitions = { "Active" },
         Duration = 5,
 
-        OnEnter = function()
+        OnEnter = function(context)
             print("Entered countdown phase")
         end,
 
-        OnExit = function()
+        OnExit = function(context)
             print("Leaving countdown phase")
         end,
     },

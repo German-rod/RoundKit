@@ -204,9 +204,9 @@ function RoundManager:Update(dt)
 		end
 	end
 
-	if phase.EvaluateWinCondition and phase.EvaluateWinConditionInterval then
+	if phase.EvaluateWinCondition and (phase.EvaluateWinConditionInterval or 1) then
 		self._winCheckElapsed += dt
-		if self._winCheckElapsed >= phase.EvaluateWinConditionInterval then
+		if self._winCheckElapsed >= (phase.EvaluateWinConditionInterval or 1) then
 			self._winCheckElapsed = 0
 			self:CheckWinCondition()
 		end
