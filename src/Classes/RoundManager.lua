@@ -21,6 +21,18 @@ local ReconnectionPolicy = require(script.Parent.ReconnectionPolicy)
 
 local Players = game:GetService("Players")
 
+-- xpcall wrapper that returns the error stack trace
+local function Try(fn, ...)
+	local args = table.pack(...)
+
+	return xpcall(function()
+		return fn(table.unpack(args, 1, args.n))
+	end, function(err)
+		warn(debug.traceback(err, 2))
+		return err
+	end)
+end
+
 --- @class RoundManager
 --- Orchestrates round lifecycles, phase transitions, and state management.
 local RoundManager = {} :: RoundManager
@@ -140,7 +152,7 @@ function RoundManager:TransitionTo(phaseName)
 			return false
 		end
 		if self.CurrentPhase.OnExit then
-			self.CurrentPhase.OnExit(ctx)
+			Try(self.CurrentPhase.OnExit, ctx)
 		end
 	end
 
@@ -154,12 +166,13 @@ function RoundManager:TransitionTo(phaseName)
 	self._phaseElapsed = 0
 	self._winCheckElapsed = 0
 
-	if nextPhase.OnEnter then
-		nextPhase.OnEnter(self:BuildContext())
-	end
-
 	self.EventBus:Fire("OnPhaseChanged", oldPhase, nextPhase)
 	self._transitioning = false
+
+	if nextPhase.OnEnter then
+		Try(nextPhase.OnEnter, self:BuildContext())
+	end
+
 	return true
 end
 
@@ -197,9 +210,10 @@ function RoundManager:Update(dt)
 		local ctx = self:BuildContext()
 		local allowed = self:ResolveAllowedTransitions(phase, ctx)
 		for _, targetName in ipairs(allowed) do
-			if phase.CanTransitionTo(ctx, targetName) then
-				self:TransitionTo(targetName)
-				return
+			local ok, result = Try(phase.CanTransitionTo, ctx, targetName)
+			if ok and result then
+   				 self:TransitionTo(targetName)
+    			return
 			end
 		end
 	end
@@ -259,7 +273,8 @@ function RoundManager:EvaluateWinCondition()
 		return nil
 	end
 
-	return self.WinCondition:Evaluate(self:BuildContext())
+	local ok, outcome = Try(self.WinCondition.Evaluate, self.WinCondition, self:BuildContext())
+	return ok and outcome or nil
 end
 
 --- Resolves the allowed transitions for the given phase.
@@ -269,11 +284,11 @@ end
 function RoundManager:ResolveAllowedTransitions(phase, ctx)
 	local allowed = phase.AllowedTransitions
 	if type(allowed) == "function" then
-		local resolved = allowed(ctx)
-		assert(
-			type(resolved) == "table",
-			"RoundKit phase '" .. phase.Name .. "'s AllowedTransitions function must return a table"
-		)
+		local ok, resolved = Try(allowed, ctx)
+		if not ok then
+    		return {}
+		end
+		assert(type(resolved) == "table", "RoundKit phase '" .. phase.Name .. "'s AllowedTransitions function must return a table")
 		return resolved
 	end
 	return allowed
