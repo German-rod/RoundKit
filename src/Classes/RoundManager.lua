@@ -88,11 +88,11 @@ function RoundManager:Start()
 	end
 
 	local lastTime = os.clock()
-	local function tick()
+	local function tick(deltaTime)
 		local now = os.clock()
 		local dt = now - lastTime
 		lastTime = now
-		self:Update(dt)
+		self:Update(deltaTime and deltaTime or dt)
 	end
 
 	if self.Config.Driver then
@@ -189,33 +189,33 @@ function RoundManager:Update(dt)
 	end
 
 	self._phaseElapsed += dt
-
+	
 	-- checks if the phase has a defined duration and if the elapsed time is past the duration.
-	if phase.Duration and self._phaseElapsed >= phase.Duration then
-		-- transitions to the resolved allowed transitions for the phase
-		local ctx = self:BuildContext()
-		local allowed = self:ResolveAllowedTransitions(phase, ctx)
-		assert(
-			#allowed == 1,
-			"RoundKit phase '"
-				.. phase.Name
-				.. "' has a Duration but its resolved AllowedTransitions has more than one entry"
-		)
-		self:TransitionTo(allowed[1])
+	if phase.Duration and self._phaseElapsed < phase.Duration then
 		return
 	end
 
+	local ctx = self:BuildContext()
+	local allowed = self:ResolveAllowedTransitions(phase, ctx)
+
 	-- Evaluates the CanTransitionTo function, resolves the allowed transitions and tries to transition to the first one.
 	if phase.CanTransitionTo then
-		local ctx = self:BuildContext()
-		local allowed = self:ResolveAllowedTransitions(phase, ctx)
-		for _, targetName in ipairs(allowed) do
+		for _, targetName in ipairs(allowed or {}) do
 			local ok, result = Try(phase.CanTransitionTo, ctx, targetName)
 			if ok and result then
-   				 self:TransitionTo(targetName)
-    			return
+				self:TransitionTo(targetName)
+				return
 			end
 		end
+	elseif phase.Duration then
+		assert(
+			allowed and #allowed == 1,
+			"RoundKit phase '"
+				.. phase.Name
+				.. "' has a Duration but no CanTransitionTo, and its resolved AllowedTransitions must have exactly one entry"
+		)
+		self:TransitionTo(allowed[1])
+		return
 	end
 
 	if phase.EvaluateWinCondition and (phase.EvaluateWinConditionInterval or 1) then

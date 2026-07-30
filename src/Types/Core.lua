@@ -35,15 +35,27 @@ export type Context = {
 	Connect: (self: Context, eventName: string, callback: (...any) -> ()) -> any,
 }
 
+
+--[=[
+	@interface Phase
+	@within RoundManager
+	.Name string -- The name of the phase
+	.AllowedTransitions {[string]} | (ctx: Context) -> {[string]} -- A list of phase names that this phase can transition to, or a function that returns such a list
+	.Duration number? -- Optional; the duration of this phase in seconds (default nil, meaning no automatic transition)
+	.CanTransitionTo (ctx: Context, targetPhase: string) -> boolean? -- Optional; a function that determines if the round can transition to the target phase (default nil, meaning always true)
+	.EvaluateWinCondition boolean? -- Optional; if true, the win condition will be evaluated at 'EvaluateWinConditionInterval' (defaults false)
+	.EvaluateWinConditionInterval number? -- Optional; the interval in seconds at which to evaluate the win condition (default 1)
+	.OnEnter (ctx: Context) -> ()? -- Optional; a function that is called when the round enters this phase
+	.OnExit (ctx: Context) -> ()? -- Optional; a function that is called when the round exits this phase
+]=]
 export type Phase = {
 	Name: string,
 	AllowedTransitions: { string } | (ctx: Context) -> { string },
 	Duration: number?,
 	CanTransitionTo: ((ctx: Context, targetPhase: string) -> boolean)?,
-	CheckWinCondition: boolean?,
+	EvaluateWinCondition: boolean?,
 	EvaluateWinConditionInterval: number?,
 	OnEnter: ((ctx: Context) -> ())?,
-	OnUpdate: ((ctx: Context, dt: number) -> ())?,
 	OnExit: ((ctx: Context) -> ())?,
 }
 
