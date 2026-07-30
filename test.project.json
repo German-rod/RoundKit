@@ -1,0 +1,19 @@
+{
+    "name": "RoundKit-Test",
+    "tree": {
+        "$className": "DataModel",
+        "ReplicatedStorage": {
+            "$className": "ReplicatedStorage",
+            "RoundKit": { "$path": "src" }
+        },
+        "TestService": {
+            "$className": "TestService",
+            "$properties": {
+                "ExecuteWithStudioRun": true,
+                "AutoRuns": true
+            },
+            "TestEZ": { "$path": "modules/testez/src" },
+            "run": { "$path": "test/runner.server.lua" }
+        }
+    }
+}
