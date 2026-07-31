@@ -47,6 +47,7 @@ export type Context = {
 	.EvaluateWinConditionInterval number? -- Optional; the interval in seconds at which to evaluate the win condition (default 1)
 	.OnEnter (ctx: Context) -> ()? -- Optional; a function that is called when the round enters this phase
 	.OnExit (ctx: Context) -> ()? -- Optional; a function that is called when the round exits this phase
+	.OnUpdate (ctx: Context, dt: number) -> ()? -- Optional; a function that is called every update tick while in this phase
 ]=]
 export type Phase = {
 	Name: string,
@@ -57,6 +58,7 @@ export type Phase = {
 	EvaluateWinConditionInterval: number?,
 	OnEnter: ((ctx: Context) -> ())?,
 	OnExit: ((ctx: Context) -> ())?,
+	OnUpdate: (ctx: Context, dt: number) -> ()?,
 }
 
 export type WinCondition = {
@@ -128,6 +130,7 @@ export type RoundManager = {
 
 export type WinConditionModule = {
 	new: (name: string, evaluator: (context: Context) -> WinOutcome?) -> WinCondition,
+	remove: (name: string) -> (),
 	Resolve: (nameOrInstance: string | WinCondition) -> WinCondition,
 	AnyOf: (children: { string | WinCondition }) -> WinCondition,
 	AllOf: (children: { string | WinCondition }) -> WinCondition,

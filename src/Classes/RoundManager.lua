@@ -124,7 +124,7 @@ end
 function RoundManager:Resume()
 	if not self._started then
 		warn("RoundKit Resume() called before Start()")
-		return
+		return nil
 	end
 	self._paused = false
 end
@@ -133,7 +133,7 @@ end
 --- Fires 'OnPhaseChanged' if the transition is successful.
 --- @param phaseName string
 --- @return boolean
-function RoundManager:TransitionTo(phaseName)
+function RoundManager:TransitionTo(phaseName, force)
 	if self._transitioning then
 		warn("RoundKit TransitionTo('" .. phaseName .. "') called while already transitioning")
 		return false
@@ -146,10 +146,14 @@ function RoundManager:TransitionTo(phaseName)
 	if self.CurrentPhase then
 		-- resolves the current phase allowed transitions and triggers OnExit
 		local ctx = self:BuildContext()
-		local allowed = self:ResolveAllowedTransitions(self.CurrentPhase, ctx)
-		if not table.find(allowed, phaseName) then
-			self._transitioning = false
-			return false
+
+		-- if the transition is not forced, check if the target phase is allowed, only self:Reset() can force a transition to the initial phase
+		if not force then
+			local allowed = self:ResolveAllowedTransitions(self.CurrentPhase, ctx)
+			if not table.find(allowed or {}, phaseName) then
+				self._transitioning = false
+				return false
+			end
 		end
 		if self.CurrentPhase.OnExit then
 			Try(self.CurrentPhase.OnExit, ctx)
@@ -190,6 +194,10 @@ function RoundManager:Update(dt)
 
 	self._phaseElapsed += dt
 	
+	if phase.OnUpdate then 
+		Try(phase.OnUpdate, self:BuildContext(), dt)
+	end
+
 	-- checks if the phase has a defined duration and if the elapsed time is past the duration.
 	if phase.Duration and self._phaseElapsed < phase.Duration then
 		return
@@ -353,10 +361,10 @@ function RoundManager:ClearRoundState()
 	self.EventBus:Fire("OnRoundReset")
 end
 
---- Resets the round state and transitions to the initial phase.
+--- Resets the round state and forcefully transitions to the initial phase.
 function RoundManager:Reset()
 	self:ClearRoundState()
-	self:TransitionTo(self.Config.InitialPhase)
+	self:TransitionTo(self.Config.InitialPhase, true)
 end
 
 --- Destroys the round manager, clears the round state, disconnects all connections, and destroys the event bus.
@@ -370,12 +378,15 @@ function RoundManager:Destroy()
 
 	if self._playerAddedConn then
 		self._playerAddedConn:Disconnect()
+		self._playerAddedConn = nil
 	end
 	if self._playerRemovingConn then
 		self._playerRemovingConn:Disconnect()
+		self._playerRemovingConn = nil
 	end
 	if self._driverConn then
 		self._driverConn:Disconnect()
+		self._driverConn = nil
 	end
 
 	for _, connection in ipairs(self._phaseConnections) do
@@ -384,7 +395,16 @@ function RoundManager:Destroy()
 	self._phaseConnections = {}
 
 	self.PlayerStates:Destroy()
+	self.PlayerStates = nil
+
 	self.EventBus:Destroy()
+	self.EventBus = nil
+	
+	self.Phases = {}
+	self.CurrentPhase = nil
+
+	setmetatable(self, nil)
+	self = nil
 end
 
 return RoundManager

@@ -48,6 +48,8 @@ function RoundEventBus:Destroy()
 		signal:Destroy()
 	end
 	self._signals = {}
+	setmetatable(self, nil)
+	self = nil
 end
 
 return RoundEventBus

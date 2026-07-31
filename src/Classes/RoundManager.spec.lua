@@ -1,4 +1,5 @@
 return function()
+	local RoundKit = require(script.Parent.Parent)
 	local RoundManager = require(script.Parent.RoundManager)
 	local Signal = require(script.Parent.Signal)
 
@@ -8,6 +9,118 @@ return function()
 
 	afterEach(function(context)
 		context.DriverSignal:Destroy()
+
+		RoundKit.WinCondition.remove("TestWinCondition")
+	end)
+
+	describe("Start", function()
+			it("should transition into Config.InitialPhase on Start", function(context)
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+					},
+				},
+			})
+	
+			manager:Start()
+			expect(manager.CurrentPhase.Name).to.equal("Waiting")
+		end)
+	end)
+
+	describe("Pause and Resume", function()
+		it("should not advance phase state while paused", function(context)
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						Duration = 5,
+						CanTransitionTo = function()
+							return true
+						end,
+						AllowedTransitions = { "Playing" },
+					},
+					Playing = {
+						Name = "Playing",
+					},
+				},
+			})
+
+			manager:Start()
+			context.DriverSignal:Fire(1)
+			expect(manager.CurrentPhase.Name).to.equal("Waiting")
+			manager:Pause()
+			context.DriverSignal:Fire(5)
+			expect(manager.CurrentPhase.Name).to.equal("Waiting")
+		end)
+
+		it("should resume ticking after Resume is called", function(context)
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						Duration = 5,
+						CanTransitionTo = function()
+							return true
+						end,
+						AllowedTransitions = { "Playing" },
+					},
+					Playing = {
+						Name = "Playing",
+					},
+				},
+			})
+
+			manager:Start()
+			context.DriverSignal:Fire(1)
+			expect(manager.CurrentPhase.Name).to.equal("Waiting")
+
+			manager:Pause()
+			context.DriverSignal:Fire(5)
+			expect(manager.CurrentPhase.Name).to.equal("Waiting")
+
+			manager:Resume()
+			context.DriverSignal:Fire(5)
+			expect(manager.CurrentPhase.Name).to.equal("Playing")
+		end)
+
+		
+		
+	end)
+
+	describe("Reset", function()
+		it("should properly reset the round manager on Reset", function(context)
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						Duration = 5,
+						CanTransitionTo = function()
+							return true
+						end,
+						AllowedTransitions = { "Playing" },
+					},
+					Playing = {
+						Name = "Playing",
+					},
+				},
+			})
+
+			manager:Start()
+			context.DriverSignal:Fire(5)
+			expect(manager.CurrentPhase.Name).to.equal("Playing")
+
+			manager:Reset()
+			expect(manager.CurrentPhase.Name).to.equal("Waiting")
+		end)
 	end)
 
 	describe("CanTransitionTo", function()
@@ -470,6 +583,138 @@ return function()
 
 				expect(manager.CurrentPhase.Name).to.equal("Finished")
 			end).to.never.throw()
+		end)
+	end)
+
+	describe("EvaluateWinCondition", function()
+		it("should not declare a win while the win condition returns nil", function(context)
+			local winCondition = RoundKit.WinCondition.new('TestWinCondition', function()
+				return nil
+			end)
+
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						EvaluateWinCondition = true,
+						EvaluateWinConditionInterval = 1,
+						CanTransitionTo = function()
+							return false
+						end,
+						AllowedTransitions = { "Playing" },
+					},
+					Playing = {
+						Name = "Playing",
+					},
+				},
+				WinCondition = winCondition,
+			})
+
+			manager:Start()
+			context.DriverSignal:Fire(1)
+
+			expect(manager:CheckWinCondition()).to.equal(nil)
+			expect(manager.CurrentPhase.Name).to.equal("Waiting")
+		end)
+
+		it("should declare a win when the win condition returns a real outcome", function(context)
+			local winCondition = RoundKit.WinCondition.new('TestWinCondition', function()
+				return { Type = "Players", Winners = { "Player1" } }
+			end)
+
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						EvaluateWinCondition = true,
+						EvaluateWinConditionInterval = 1,
+						CanTransitionTo = function()
+							return false
+						end,
+						AllowedTransitions = { "Finished" },
+					},
+					Finished = {
+						Name = "Finished",
+					},
+				},
+				WinCondition = winCondition,
+			})
+
+			manager:Start()
+			manager:BuildContext():Connect("OnWinConditionMet", function(outcome)
+				expect(outcome).to.be.ok()
+				expect(outcome.Type).to.equal("Players")
+				expect(outcome.Winners[1]).to.equal("Player1")
+			end)
+
+			context.DriverSignal:Fire(1)
+
+			expect(manager:CheckWinCondition()).to.be.ok()
+		end)
+
+		it("should fall back to nil and not declare a win when Evaluate throws", function(context)
+			local winCondition = RoundKit.WinCondition.new('TestWinCondition', function()
+				error("This is an error")
+			end)
+
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						EvaluateWinCondition = true,
+						EvaluateWinConditionInterval = 1,
+						CanTransitionTo = function()
+							return false
+						end,
+						AllowedTransitions = { "Playing" },
+					},
+					Playing = {
+						Name = "Playing",
+					},
+				},
+				WinCondition = winCondition,
+			})
+
+			manager:Start()
+			manager:BuildContext():Connect("OnWinConditionMet", function(outcome)
+				expect(outcome).to.never.be.ok()
+			end)
+			context.DriverSignal:Fire(1)
+
+			expect(manager:CheckWinCondition()).to.equal(nil)
+		end)
+	end)
+
+	describe("Destroy", function()
+		it("should properly destroy the round manager and disconnect all connections", function(context)
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+					},
+				},
+			})
+
+			manager:Start()
+			manager:Destroy()
+
+			expect(manager._destroyed).to.equal(true)
+			expect(manager._running).to.equal(false)
+			expect(manager._driverConn).to.equal(nil)
+			expect(manager._playerAddedConnection).to.equal(nil)
+			expect(manager._playerRemovingConnection).to.equal(nil)
+			expect(manager.CurrentPhase).to.equal(nil)
+
+			expect(manager.PlayerStates).to.equal(nil)
+			expect(manager.EventBus).to.equal(nil)
 		end)
 	end)
 end

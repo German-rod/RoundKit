@@ -21,6 +21,18 @@ function WinCondition.new(name, evaluator)
 	return self
 end
 
+--- @param name string
+--- Removes a win condition from the registry
+function WinCondition.remove(name)
+	if not registry[name] then
+		warn("RoundKit: no WinCondition registered under name '" .. name .. "'")
+		return
+	end
+	
+	setmetatable(registry[name], nil)
+	registry[name] = nil
+end
+
 --- @param context Context
 --- @return WinOutcome
 --- Evaluates the win condition using the provided context

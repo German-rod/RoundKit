@@ -60,6 +60,7 @@ function PlayerStateRegistry:Destroy()
 	self:Clear()
 	self._states = nil
 	setmetatable(self, nil)
+	self = nil
 end
 
 return PlayerStateRegistry
