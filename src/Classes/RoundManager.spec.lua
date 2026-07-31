@@ -717,4 +717,186 @@ return function()
 			expect(manager.EventBus).to.equal(nil)
 		end)
 	end)
+
+	describe("OnUpdate", function()
+		it("should call OnUpdate on the current phase during a tick", function(context)
+			local called = false
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						OnUpdate = function()
+							called = true
+						end,
+					},
+				},
+			})
+	
+			manager:Start()
+			context.DriverSignal:Fire(1)
+	
+			expect(called).to.equal(true)
+		end)
+	
+		it("should pass the current context and dt to OnUpdate", function(context)
+			local receivedCtx, receivedDt
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						OnUpdate = function(ctx, dt)
+							receivedCtx, receivedDt = ctx, dt
+						end,
+					},
+				},
+			})
+	
+			manager:Start()
+			context.DriverSignal:Fire(0.5)
+	
+			expect(receivedCtx).never.to.equal(nil)
+			expect(receivedDt).to.equal(0.5)
+		end)
+	
+		it("should not error when the current phase has no OnUpdate", function(context)
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = { Name = "Waiting" },
+				},
+			})
+	
+			manager:Start()
+	
+			expect(function()
+				context.DriverSignal:Fire(1)
+			end).to.never.throw()
+		end)
+	
+		it("should not call OnUpdate while paused", function(context)
+			local called = false
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						OnUpdate = function()
+							called = true
+						end,
+					},
+				},
+			})
+	
+			manager:Start()
+			manager:Pause()
+			context.DriverSignal:Fire(1)
+	
+			expect(called).to.equal(false)
+		end)
+	
+		it("should not call OnUpdate when there is no current phase", function()
+			-- Update() is called directly here, before Start(), since Start()
+			-- both connects the Driver and immediately transitions into
+			-- InitialPhase — there's no way to reach "driver connected but no
+			-- current phase" through the public Start()/Driver flow.
+			local called = false
+			local manager = RoundManager.new({
+				Driver = { Connect = function() return { Disconnect = function() end } end },
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						OnUpdate = function()
+							called = true
+						end,
+					},
+				},
+			})
+	
+			manager:Update(1)
+	
+			expect(called).to.equal(false)
+		end)
+	
+		it("should call OnUpdate once per driver tick", function(context)
+			local callCount = 0
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						OnUpdate = function()
+							callCount += 1
+						end,
+					},
+				},
+			})
+	
+			manager:Start()
+			context.DriverSignal:Fire(1)
+			context.DriverSignal:Fire(1)
+			context.DriverSignal:Fire(1)
+	
+			expect(callCount).to.equal(3)
+		end)
+	
+		it("should call the new phase's OnUpdate, not the old one's, after a transition", function(context)
+			local waitingCalls, playingCalls = 0, 0
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						OnUpdate = function()
+							waitingCalls += 1
+						end,
+						AllowedTransitions = { "Playing" },
+					},
+					Playing = {
+						Name = "Playing",
+						OnUpdate = function()
+							playingCalls += 1
+						end,
+					},
+				},
+			})
+	
+			manager:Start()
+			context.DriverSignal:Fire(1)
+			manager:TransitionTo("Playing")
+			context.DriverSignal:Fire(1)
+	
+			expect(waitingCalls).to.equal(1)
+			expect(playingCalls).to.equal(1)
+		end)
+	
+		it("should not leave the manager stuck when OnUpdate throws", function(context)
+			local manager = RoundManager.new({
+				Driver = context.DriverSignal,
+				InitialPhase = "Waiting",
+				Phases = {
+					Waiting = {
+						Name = "Waiting",
+						OnUpdate = function()
+							error("This is an error")
+						end,
+					},
+				},
+			})
+	
+			manager:Start()
+	
+			expect(function()
+				context.DriverSignal:Fire(1)
+				context.DriverSignal:Fire(1)
+			end).to.never.throw()
+		end)
+	end)
 end
