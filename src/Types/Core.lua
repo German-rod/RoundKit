@@ -35,20 +35,6 @@ export type Context = {
 	Connect: (self: Context, eventName: string, callback: (...any) -> ()) -> any,
 }
 
-
---[=[
-	@interface Phase
-	@within RoundManager
-	.Name string -- The name of the phase
-	.AllowedTransitions {[string]} | (ctx: Context) -> {[string]} -- A list of phase names that this phase can transition to, or a function that returns such a list
-	.Duration number? -- Optional; the duration of this phase in seconds (default nil, meaning no automatic transition)
-	.CanTransitionTo (ctx: Context, targetPhase: string) -> boolean? -- Optional; a function that determines if the round can transition to the target phase (default nil, meaning always true)
-	.EvaluateWinCondition boolean? -- Optional; if true, the win condition will be evaluated at 'EvaluateWinConditionInterval' (defaults false)
-	.EvaluateWinConditionInterval number? -- Optional; the interval in seconds at which to evaluate the win condition (default 1)
-	.OnEnter (ctx: Context) -> ()? -- Optional; a function that is called when the round enters this phase
-	.OnExit (ctx: Context) -> ()? -- Optional; a function that is called when the round exits this phase
-	.OnUpdate (ctx: Context, dt: number) -> ()? -- Optional; a function that is called every update tick while in this phase
-]=]
 export type Phase = {
 	Name: string,
 	AllowedTransitions: { string } | (ctx: Context) -> { string },
@@ -71,20 +57,6 @@ export type ReconnectionPolicy = {
 	Handle: (self: ReconnectionPolicy, ctx: Context, player: Player, previousState: PlayerRoundState) -> (),
 }
 
---[=[
-	@interface RoundConfig
-	@within RoundManager
-	.Phases {[string]: Phase} -- Table of phase definitions, keyed by name
-	.InitialPhase string -- Which key in Phases to enter on Start()
-	.WinCondition string | WinCondition -- A registered name or a raw WinCondition instance
-	.ReconnectionPolicy string | ReconnectionPolicy? -- Optional; a registered name or raw instance
-	.Driver RBXScriptSignal? -- Optional; overrides the default polling loop
-	.UpdateInterval number? -- Optional; seconds between ticks when no Driver is set (default 1)
-	.AutoWirePlayers boolean? -- Optional; if true, automatically connects to Players.PlayerAdded and Players.PlayerRemoving (default false)
-	.StaleStateTimeout number? -- Optional; seconds before a disconnected player's state is considered stale (default 30)
-
-	The configuration table passed to `RoundKit.new()`.
-]=]
 export type RoundConfig = {
 	Phases: { [string]: Phase },
 	InitialPhase: string,
