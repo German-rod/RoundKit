@@ -22,33 +22,7 @@ Two supporting systems sit underneath these:
 
 ## How they fit together
 
-```mermaid
-flowchart LR
-    subgraph Round["RoundManager"]
-        direction TB
-        Lobby["Lobby"] -->|CanTransitionTo| Countdown["Countdown"]
-        Countdown -->|Duration elapses| Active["Active"]
-        Active -->|WinCondition met| Results["Results"]
-        Results --> Lobby
-    end
-
-    Context(["Context"])
-    WinCondition(["WinCondition"])
-    PlayerState[("PlayerStateRegistry")]
-    GlobalMetrics[("GlobalMetricRegistry")]
-    EventBus{{"RoundEventBus"}}
-
-    Round -->|builds| Context
-    Active -.->|evaluates| WinCondition
-    WinCondition -->|WinOutcome| Round
-
-    Context -->|reads / writes| PlayerState
-    Context -->|reads / writes| GlobalMetrics
-    Context -->|Connect / Fire| EventBus
-
-    GameCode["Your game code"] -->|calls| Context
-    EventBus -.->|notifies| GameCode
-```
+<img width="5497" height="3036" alt="Untitled diagram-2026-08-01-004944" src="https://github.com/user-attachments/assets/57d0f984-bc0a-4749-a498-f67e601c5b30" />
 
 A few things worth noticing in this diagram:
 
