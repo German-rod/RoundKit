@@ -161,6 +161,7 @@ end
 --- Evaluates whetever the current phase can transition to the given phase
 --- Fires 'OnPhaseChanged' if the transition is successful.
 --- @param phaseName string
+--- @param force boolean? -- Internal use only; forces the transition even if the target phase is not allowed (used by Reset())
 --- @return boolean
 function RoundManager:TransitionTo(phaseName, force)
 	if self._transitioning then
