@@ -5,6 +5,7 @@ registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 license = "MIT"
 description = "A modular, round-flow framework for Roblox."
+repository = "https://github.com/German-rod/RoundKit"
 
 exclude = [
     "**/*.spec.lua",

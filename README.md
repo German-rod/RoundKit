@@ -62,6 +62,13 @@ manager:Start()
 
 See the [documentation](https://german-rod.github.io/RoundKit/) for the full guide and API reference, including custom win conditions, reconnection policies, and the event bus.
 
+## Installation
+
+```toml
+[dependencies]
+RoundKit = "german-rod/roundkit@0.1.0"
+```
+
 ## Documentation
 
 Full documentation, guides, and API reference: **https://german-rod.github.io/RoundKit/**
