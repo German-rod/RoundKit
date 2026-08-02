@@ -4,7 +4,7 @@ RoundKit is a framework for building round-based games on Roblox. It models a ro
 
 ## Why this exists
 
-I built RoundKit while working on my own round-based games, after rewriting the same phase/state-machine logic from scratch too many times. It started as an internal tool and portfolio piece, not a public library. I'm sharing it as-is in case the approach is useful to someone else.
+I built RoundKit while working on my own round-based games, after rewriting the same phase/state-machine logic from scratch too many times. It started as an internal tool and portfolio piece. I'm publishing it because the architecture may be useful to other Roblox developers.
 
 If your game has rounds: lobby → countdown → play → results, or similar. RoundKit gives you:
 

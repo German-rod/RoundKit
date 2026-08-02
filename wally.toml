@@ -1,0 +1,19 @@
+[package]
+name = "german-rod/roundkit"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+license = "MIT"
+description = "A modular, round-flow framework for Roblox."
+
+exclude = [
+    "**/*.spec.lua",
+    "docs",
+    "test",
+    "test.project.json",
+    "modules",
+    ".github",
+    "moonwave.toml",
+]
+
+[dependencies]

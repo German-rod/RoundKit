@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: Build RoundKit.rbxl
+        run: rojo build default.project.json --output RoundKit.rbxl
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: RoundKit.rbxl
+          generate_release_notes: true
