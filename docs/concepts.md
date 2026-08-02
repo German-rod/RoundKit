@@ -8,28 +8,24 @@ RoundKit is built around four core concepts. Understanding how they fit together
 
 ## A round is a state machine, not a script
 
-Most hand-rolled round systems end up as a pile of `if phase == "X"` checks spread across several scripts, with player state, timers, and win logic all tangled together. RoundKit separates those concerns into four pieces:
+Many round systems evolve into if phase == "X" checks spread across multiple scripts, where phases, player state, timers, and win logic become tightly coupled. RoundKit separates those responsibilities into four pieces.
 
-- **`RoundManager`** — owns the round. It holds the current phase, drives the update loop, and coordinates transitions.
-- **`Phases`** — plain data describing each stage of the round (`Lobby`, `Countdown`, `Active`, `Results`, or whatever your game needs), including what they can transition to and what happens on enter/exit/update.
-- **`Context`** — the interface your game code actually talks to. It wraps the manager and exposes the operations you need (reading player state, checking the current phase, transitioning, firing events) without exposing the manager's internals.
-- **`WinCondition`** — a named, reusable rule that decides when a phase should end and who won.
+- **`RoundManager`**: owns the round lifecycle, updates the active phase, and coordinates transitions.
+- **`Phases`**: define each stage of the round, its allowed transitions, and its enter, update, and exit behavior.
+- **`Context`**: the API exposed to phases, win conditions, and game code.
+- **`WinCondition`**: evaluates whether a phase should end and returns the outcome.
 
-Two supporting systems sit underneath these:
-
-- **`PlayerStateRegistry` / `GlobalMetricRegistry`** — per-player and round-wide data, scoped to the round and cleaned up automatically when it resets.
-- **`RoundEventBus`** — allows phases, win conditions, and game systems to communicate without direct dependencies.
+Supporting systems:
+- **`PlayerStateRegistry` / `RoundMetricRegistry`**: store round-scoped player and shared state.
+- **`RoundEventBus`**: provides event-based communication between round systems.
 
 ## How they fit together
 
-<img width="5497" height="3036" alt="Untitled diagram-2026-08-01-004944" src="https://github.com/user-attachments/assets/57d0f984-bc0a-4749-a498-f67e601c5b30" />
+<img width="1200" height="600" alt="Untitled diagram-2026-08-01-004944" src="https://github.com/user-attachments/assets/57d0f984-bc0a-4749-a498-f67e601c5b30" />
 
 A few things worth noticing in this diagram:
 
-- Your game code never talks to `RoundManager` directly, it goes through `Context`. This is intentional: `Context` is the stable surface your phases and win conditions depend on, so the manager's internals can change without breaking your game code.
-- `WinCondition` doesn't transition phases itself, it returns a `WinOutcome`, and it's up to the phase's `OnEnter` handler (via `Context:Connect("OnWinConditionMet", ...)`) to decide what to do with it. This keeps "did someone win" separate from "what happens when they do."
-- `PlayerStateRegistry` and `GlobalMetricRegistry` are round-scoped, not global, they exist for the lifetime of a round and clear out when it resets, so you don't have to manually track and wipe player data between matches.
-- The event bus is the escape hatch: anything that doesn't fit neatly into a phase hook (UI updates, analytics, cross-system side effects) can hang off an event instead of being wedged into `OnEnter`/`OnUpdate`.
+Game code interacts with the round through `Context`, not `RoundManager`. Win conditions report a `WinOutcome`; phases decide how to respond. Player state is scoped to the current round and is cleared when the round ends. Systems that don't belong in a phase hook can communicate through `RoundEventBus`.
 
 ## Why it's structured this way
 
@@ -37,8 +33,10 @@ The split exists because these three questions tend to change independently of e
 
 1. **What stages does a round go through?** (phases)
 2. **When has someone won?** (win conditions)
-3. **What happens to a player mid-round who disconnects?** (reconnection policies — covered later)
+3. **What happens to a player mid-round who disconnects?** (reconnection policies, covered later)
 
-Because these pieces are independent, you can swap a `LastAlive` win condition for a `TimeLimit` one without changing your phases, or add new phases without rewriting win logic. The goal isn't to provide functionality you couldn't build yourself, it's to provide a structure that stays manageable as your game grows.
+Phases, win conditions, and reconnection policies solve different problems and tend to change independently. Keeping them separate lets you replace a win condition without modifying phase definitions, or add phases without rewriting game logic.
 
-With that mental model in place, the next sections walk through each piece in detail, starting with the smallest possible working round.
+RoundKit doesn't introduce concepts you couldn't build yourself. It provides a structure that keeps those concepts independent as your game grows.
+
+The following sections introduce each component in more detail.

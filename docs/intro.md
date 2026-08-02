@@ -11,11 +11,11 @@ The framework takes care of the round flow so you can focus on implementing your
 
 A RoundKit game consists of a few simple building blocks:
 
-- **RoundManager** — Owns the round, updates phases, evaluates win conditions, and coordinates transitions.
-- **Phases** — Represent the different stages of a round (Lobby, Countdown, Active, Results, etc.).
-- **Context** — Provides a controlled interface for interacting with the current round.
-- **Win Conditions** — Determine when a round has been won and by whom.
-- **Reconnection Policies** — Define how players are handled after disconnecting and rejoining.
+- **RoundManager** - Owns the round, updates phases, evaluates win conditions, and coordinates transitions.
+- **Phases** - Represent the different stages of a round (Lobby, Countdown, Active, Results, etc.).
+- **Context** - Provides a controlled interface for interacting with the current round.
+- **Win Conditions** - Determine when a round has been won and by whom.
+- **Reconnection Policies** - Define how players are handled after disconnecting and rejoining.
 
 ## Example Usage
 

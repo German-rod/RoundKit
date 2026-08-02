@@ -2,7 +2,15 @@
 --- Used to store global metrics for the round
 local GlobalMetricRegistry = {}
 GlobalMetricRegistry.__index = GlobalMetricRegistry
-GlobalMetricRegistry._data = {}
+
+
+--- @return GlobalMetricRegistry
+--- Constructs a new GlobalMetricRegistry.
+function GlobalMetricRegistry.new()
+	local self = setmetatable({_data = {}}, GlobalMetricRegistry)
+
+	return self
+end
 
 --- @param key string
 --- @return any
@@ -22,11 +30,19 @@ end
 --- @return ()
 --- Clears all values from the registry
 function GlobalMetricRegistry:Clear()
-	for key in pairs(self._data) do
-		if type(key) == "string" then
-			self._data[key] = nil
-		end
+	for i,_ in pairs(self._data) do
+		self._data[i] = nil
 	end
+
+	self._data = {}
+end
+
+
+--- @return ()
+--- Destroys the global metric registry
+function GlobalMetricRegistry:Destroy()
+	self:Clear()
+	setmetatable(self, nil)
 end
 
 return GlobalMetricRegistry

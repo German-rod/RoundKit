@@ -78,7 +78,7 @@ function RoundManager.new(config): RoundManager
 		CurrentPhase = nil,
 		StaleStateTimeout = config.StaleStateTimeout or 30,
 		PlayerStates = PlayerStateRegistry.new(),
-		GlobalMetrics = setmetatable({}, GlobalMetricRegistry),
+		GlobalMetrics = GlobalMetricRegistry.new(),
 		WinCondition = WinCondition.Resolve(config.WinCondition),
 		ReconnectionPolicy = config.ReconnectionPolicy and ReconnectionPolicy.Resolve(config.ReconnectionPolicy) or nil,
 		EventBus = RoundEventBus.new(),
@@ -391,6 +391,7 @@ end
 --- Fires 'OnRoundReset' when the round state is cleared.
 function RoundManager:ClearRoundState()
 	self.PlayerStates:Clear()
+	self.GlobalMetrics:Clear()
 	self.EventBus:Fire("OnRoundReset")
 end
 
@@ -432,6 +433,9 @@ function RoundManager:Destroy()
 
 	self.EventBus:Destroy()
 	self.EventBus = nil
+
+	self.GlobalMetrics:Destroy()
+	self.GlobalMetrics = nil
 
 	self.Phases = {}
 	self.CurrentPhase = nil

@@ -4,7 +4,7 @@ export type Context = {
 	Config: any,
 
 	GetPlayers: (self: Context) -> { Player },
-	GetMetric: (self: Context, entity: any, key: string) -> number,
+	GetMetric: (self: Context, player: any, key: string) -> number,
 	GetReadyPlayerCount: (self: Context) -> number,
 	GetElapsedTime: (self: Context) -> number,
 	GetCurrentPhase: (self: Context) -> any,

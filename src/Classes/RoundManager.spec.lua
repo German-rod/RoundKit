@@ -803,7 +803,7 @@ return function()
 		it("should not call OnUpdate when there is no current phase", function()
 			-- Update() is called directly here, before Start(), since Start()
 			-- both connects the Driver and immediately transitions into
-			-- InitialPhase — there's no way to reach "driver connected but no
+			-- InitialPhase - there's no way to reach "driver connected but no
 			-- current phase" through the public Start()/Driver flow.
 			local called = false
 			local manager = RoundManager.new({

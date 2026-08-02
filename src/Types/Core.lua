@@ -16,7 +16,7 @@ export type Context = {
 	Config: RoundConfig,
 
 	GetPlayers: (self: Context) -> { Player },
-	GetMetric: (self: Context, entity: Player, key: string) -> number,
+	GetMetric: (self: Context, player: Player, key: string) -> number,
 	GetReadyPlayerCount: (self: Context) -> number,
 	GetElapsedTime: (self: Context) -> number,
 	GetCurrentPhase: (self: Context) -> Phase?,

@@ -27,12 +27,24 @@ function Context:GetPlayers()
 	return players
 end
 
---- @param entity Player
+--- @param player Player
+--- @param key string
+--- @param value string | number
+--- @return ()
+--- Sets a metric for the given player
+function Context:SetMetric(player, key, value)
+	local state = self.RoundManager.PlayerStates:GetPlayerState(player.UserId)
+	if state then
+		state:SetMetric(key, value)
+	end
+end
+
+--- @param player Player
 --- @param key string
 --- @return any
---- Returns the requested metric for the given entity
-function Context:GetMetric(entity, key)
-	local state = self.RoundManager.PlayerStates:GetPlayerState(entity.UserId)
+--- Returns the requested metric for the given player
+function Context:GetMetric(player, key)
+	local state = self.RoundManager.PlayerStates:GetPlayerState(player.UserId)
 	return state and state:GetMetric(key) or 0
 end
 
