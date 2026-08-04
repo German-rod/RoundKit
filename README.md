@@ -64,10 +64,13 @@ See the [documentation](https://german-rod.github.io/RoundKit/) for the full gui
 
 ## Installation
 
+Wally
 ```toml
 [dependencies]
 RoundKit = "german-rod/roundkit@0.1.0"
 ```
+
+Alternatively you can find an updated roblox studio file containing the module in the repository releases.
 
 ## Documentation
 
