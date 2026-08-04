@@ -81,9 +81,6 @@ Full documentation, guides, and API reference: **https://german-rod.github.io/Ro
 RoundKit is provided **as-is**, with no guaranteed maintenance, feature requests, or support timeline. It was built for my own projects and shared publicly in case it's useful to others.
 
 - **Docs:** the link above is the extent of available guidance.
-- **Issues:** bug reports with a minimal reproduction are welcome.
-- **Pull requests:** open to them.
-- **Support:** I don't provide implementation help or game-scripting support.
 
 ## License
 
